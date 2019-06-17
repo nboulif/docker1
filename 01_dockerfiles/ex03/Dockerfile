@@ -17,7 +17,7 @@ RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 RUN echo "letsencrypt['enable'] = true" >> /etc/gitlab/gitlab.rb
 RUN echo "external_url \"https://192.168.99.105\"" >> /etc/gitlab/gitlab.rb
-RUN echo "letsencrypt['contact_emails'] = ['foo@email.com']" >> /etc/gitlab/gitlab.rb
+RUN echo "letsencrypt['contact_emails'] = ['foo@emailx.com']" >> /etc/gitlab/gitlab.rb
 
 RUN echo "nginx['ssl_certificate'] = \"/etc/gitlab/ssl/selfsigned.crt\""  >> /etc/gitlab/gitlab.rb && \
 	echo "nginx['ssl_certificate_key'] = \"/etc/gitlab/ssl/selfsigned.key\"" >> /etc/gitlab/gitlab.rb && \

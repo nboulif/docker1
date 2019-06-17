@@ -33,10 +33,11 @@ docker pull debian
 docker run -it debian /bin/sh
 
 apt-get update
-apt-get upgrade
+apt-get upgrade -y
 apt-get install nano
 apt-get install build-essential
 apt-get install git
+exit
 
 # 10
 docker volume create --name hatchery
@@ -129,7 +130,23 @@ docker rmi $(docker images -a -q)
 # 34
 docker-machine rm -y Aiur
 
+# TO CLEAN REST
 
+docker volume rm $(docker volume ls -q)
+docker-machine rm -y Char
+
+# TO BUILD IMAGE
+
+# docker build -t ex00 ex00
+# docker run --rm -ti ex00
+
+
+# docker build -t ex01 ex01
+# docker run --rm -p 9987:9987/udp -p 10011:10011 -p 30033:30033 ex01
+
+# docker build -t ex02 ft-rails:on-build
+# docker build -t ex02 test
+# docker run -it --rm -p 3000:3000 ex02
 
 
 

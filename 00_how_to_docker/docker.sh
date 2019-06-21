@@ -1,3 +1,6 @@
+# export MACHINE_STORAGE_PATH=/tmp  
+
+
 # 01 
 docker-machine create --driver virtualbox Char
 
@@ -5,7 +8,8 @@ docker-machine create --driver virtualbox Char
 docker-machine ip Char
 
 # 03 : must replqce 'eval' with not a builtin
-eval $(docker-machine env Char)
+# eval $(docker-machine env Char)
+``$(docker-machine env Char | sed  -e '$ d' | sed  -e '$ d' | sed s/\"//g )``
 docker ps
 
 # 04

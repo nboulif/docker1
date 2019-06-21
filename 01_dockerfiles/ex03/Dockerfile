@@ -1,29 +1,40 @@
 FROM debian
+WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y curl openssh-server ca-certificates
+# RUN echo 'root:qazwsxedc' | chpasswd
 
-EXPOSE 22 443 80 22222
+RUN apt-get update
+RUN apt-get install -y wget openssh-server ca-certificates postfix
+# RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-RUN curl -s https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
-RUN apt-get install gitlab-ce
-RUN gitlab-ctl reconfigure
+RUN wget https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh \
+	&& chmod 777 script.deb.sh && ./script.deb.sh
+RUN apt-get install -y gitlab-ce
 
+RUN apt update && apt install -y tzdata
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-		-subj "/C=BE/ST=ex/L=ex/O=ex/OU=ex/CN=192.168.99.100/emailAddress=nboulif@student.s19.be" \
-		-keyout /etc/gitlab/ssl/selfsigned.key \
-		-out /etc/gitlab/ssl/selfsigned.crt
+RUN mkdir -p /etc/gitlab/ssl
+RUN chmod 700 /etc/gitlab/ssl
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:4096 \
+	-subj /C=BE/ST=bxl/L=bxl/O=bxl/OU=rs1/CN=192.168.99.103/emailAddress=nboulif@student.s19.be \
+	-keyout /etc/gitlab/ssl/selfsigned.key -out /etc/gitlab/ssl/selfsigned.crt
 
-RUN echo "letsencrypt['enable'] = true" >> /etc/gitlab/gitlab.rb
-RUN echo "external_url \"https://192.168.99.105\"" >> /etc/gitlab/gitlab.rb
-RUN echo "letsencrypt['contact_emails'] = ['foo@emailx.com']" >> /etc/gitlab/gitlab.rb
+RUN echo "external_url \"https://192.168.99.103\"
+nginx['redirect_http_to_https'] = true
+nginx['ssl_certificate'] = \"/etc/gitlab/ssl/selfsigned.crt\"
+nginx['ssl_certificate_key'] = \"/etc/gitlab/ssl/selfsigned.key\"
+gitlab_rails['gitlab_shell_ssh_port'] = 2222" >> /etc/gitlab/gitlab.rb
 
-RUN echo "nginx['ssl_certificate'] = \"/etc/gitlab/ssl/selfsigned.crt\""  >> /etc/gitlab/gitlab.rb && \
-	echo "nginx['ssl_certificate_key'] = \"/etc/gitlab/ssl/selfsigned.key\"" >> /etc/gitlab/gitlab.rb && \
-	echo "nginx['redirect_http_to_https'] = true" >> /etc/gitlab/gitlab.rb && \
-	echo "nginx['redirect_http_to_https_port'] = 80" >> /etc/gitlab/gitlab.rb && \
-	echo "letsencrypt['enable'] = false" >> /etc/gitlab/gitlab.rb && \
-	echo "gitlab_rails['gitlab_ssh_host'] = '192.168.99.100'" >> /etc/gitlab/gitlab.rb && \
-	echo "gitlab_rails['gitlab_shell_ssh_port'] = 22222" >> /etc/gitlab/gitlab.rb
+ENTRYPOINT service ssh restart && (/opt/gitlab/embedded/bin/runsvdir-start &) 
+	&& gitlab-ctl reconfigure && gitlab-ctl tail
 
+# docker build -t ex03 .
+# docker run --name ex03 -it -p 80:80 -p 2222:22 -p 443:443 --privileged ex03
+
+# ssh-keygen -o -f ~/.ssh/id_rsa
+# pbcopy < ~/.ssh/id_rsa.pub
+# paste result on website
+
+# When git clone or git push with HTTPS add 'GIT_SSL_NO_VERIFY=true' at the begining of each commands like '$ GIT_SSL_NO_VERIFY=true git push'
+# When git push with https://* in directory do '$ git config http.emptyAuth true' to avoid HTTP error if you get one
